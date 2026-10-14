@@ -3,11 +3,12 @@ set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 version=$(python3 -c 'import json; print(json.load(open("manifest.json"))["version"])')
-archive="omarchy-screenpad-$version.tar.gz"
+archive="asus-screenpad-$version.tar.gz"
 tar --sort=name --mtime='2026-01-01' --owner=0 --group=0 --numeric-owner \
-  --transform="s,^,omarchy-screenpad-$version/," \
+  --transform="s,^,asus-screenpad-$version/," \
   -czf "packaging/$archive" manifest.json Panel.qml screenpadctl install.sh README.md \
-  LICENSE tests/test_controller.py packaging/omarchy-screenpad-install
+  LICENSE tray.py desktop/asus-screenpad.desktop desktop/asus-screenpad.svg docs/omarchy.md \
+  tests/test_controller.py tests/test_tray.py packaging/asus-screenpad packaging/omarchy-screenpad-install
 cd packaging
 checksum=$(sha256sum "$archive" | cut -d' ' -f1)
 # Keep the public PKGBUILD and its release checksum untouched by local builds.

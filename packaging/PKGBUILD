@@ -1,29 +1,36 @@
 # Maintainer: pinpin-http <https://github.com/pinpin-http>
-pkgname=omarchy-screenpad
-pkgver=0.1.1
+pkgname=asus-screenpad
+pkgver=0.2.0
 pkgrel=1
-pkgdesc='ASUS ScreenPad Plus brightness controls for the Omarchy bar'
+pkgdesc='ASUS ScreenPad Plus brightness controls and system tray app'
 arch=('any')
-url='https://github.com/pinpin-http/omarchy-screenpad'
+url='https://github.com/pinpin-http/asus-screenpad'
 license=('MIT')
-depends=('omarchy>=4.0' 'quickshell' 'python' 'brightnessctl')
+depends=('python' 'pyside6' 'brightnessctl' 'qt6-wayland')
+optdepends=('omarchy: optional native bar widget')
+conflicts=('omarchy-screenpad')
 source=("$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz")
-sha256sums=('8b1894c83df3ecbc5471ea766b1b8c0ad56dced04d7936c6f6af97127fc0e92d')
+sha256sums=('b04239c81106a578dbfd6e5d7d106a68b5178bd9a321ac8e77a19f387c0aa6b3')
 
 check() {
   cd "$srcdir/$pkgname-$pkgver"
-  python -m unittest discover -s tests -v
-  omarchy plugin validate .
+  QT_QPA_PLATFORM=offscreen python -m unittest discover -s tests -v
+  python -c 'import json; json.load(open("manifest.json"))'
 }
 
 package() {
   cd "$srcdir/$pkgname-$pkgver"
-  local data_dir="$pkgdir/usr/share/$pkgname"
-  install -d "$data_dir"
-  install -m644 manifest.json Panel.qml README.md LICENSE "$data_dir/"
-  install -m755 screenpadctl install.sh "$data_dir/"
+  install -Dm755 tray.py "$pkgdir/usr/lib/$pkgname/tray.py"
+  install -Dm755 screenpadctl "$pkgdir/usr/lib/$pkgname/screenpadctl"
   install -Dm755 screenpadctl "$pkgdir/usr/bin/screenpadctl"
+  install -Dm755 packaging/asus-screenpad "$pkgdir/usr/bin/asus-screenpad"
+  install -Dm644 desktop/asus-screenpad.desktop "$pkgdir/usr/share/applications/asus-screenpad.desktop"
+  install -Dm644 desktop/asus-screenpad.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/asus-screenpad.svg"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
-  install -Dm755 packaging/omarchy-screenpad-install "$pkgdir/usr/bin/omarchy-screenpad-install"
+  local integration="$pkgdir/usr/share/$pkgname/omarchy"
+  install -d "$integration"
+  install -m644 manifest.json Panel.qml README.md LICENSE "$integration/"
+  install -m755 screenpadctl install.sh "$integration/"
+  install -Dm755 packaging/omarchy-screenpad-install "$pkgdir/usr/bin/asus-screenpad-install-omarchy"
 }

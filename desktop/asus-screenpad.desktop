@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ASUS ScreenPad
+Comment=Adjust ASUS ScreenPad Plus brightness
+Comment[fr]=Régler la luminosité du ScreenPad Plus ASUS
+Exec=asus-screenpad
+Icon=asus-screenpad
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=ASUS;ScreenPad;Brightness;Luminosité;

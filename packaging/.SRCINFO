@@ -1,15 +1,17 @@
-pkgbase = omarchy-screenpad
-	pkgdesc = ASUS ScreenPad Plus brightness controls for the Omarchy bar
-	pkgver = 0.1.1
+pkgbase = asus-screenpad
+	pkgdesc = ASUS ScreenPad Plus brightness controls and system tray app
+	pkgver = 0.2.0
 	pkgrel = 1
-	url = https://github.com/pinpin-http/omarchy-screenpad
+	url = https://github.com/pinpin-http/asus-screenpad
 	arch = any
 	license = MIT
-	depends = omarchy>=4.0
-	depends = quickshell
 	depends = python
+	depends = pyside6
 	depends = brightnessctl
-	source = https://github.com/pinpin-http/omarchy-screenpad/releases/download/v0.1.1/omarchy-screenpad-0.1.1.tar.gz
-	sha256sums = 8b1894c83df3ecbc5471ea766b1b8c0ad56dced04d7936c6f6af97127fc0e92d
+	depends = qt6-wayland
+	optdepends = omarchy: optional native bar widget
+	conflicts = omarchy-screenpad
+	source = https://github.com/pinpin-http/asus-screenpad/releases/download/v0.2.0/asus-screenpad-0.2.0.tar.gz
+	sha256sums = b04239c81106a578dbfd6e5d7d106a68b5178bd9a321ac8e77a19f387c0aa6b3
 
-pkgname = omarchy-screenpad
+pkgname = asus-screenpad

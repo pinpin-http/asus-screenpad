@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 set -euo pipefail
-exec /usr/share/omarchy-screenpad/install.sh "$@"
+exec /usr/share/asus-screenpad/omarchy/install.sh "$@"
