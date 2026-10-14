@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""Control only the ASUS secondary backlight, through brightnessctl/logind."""
+
+import argparse
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+def find_device():
+    for path in (Path('/sys/class/backlight/asus_screenpad'),
+                 Path('/sys/class/leds/asus::screenpad')):
+        if (path / 'brightness').is_file() and (path / 'max_brightness').is_file():
+            return path
+    raise RuntimeError('Aucun pilote de luminosité ASUS ScreenPad détecté.')
+
+
+def status(device):
+    maximum = int((device / 'max_brightness').read_text())
+    raw = int((device / 'brightness').read_text())
+    if maximum <= 0 or not 0 <= raw <= maximum:
+        raise RuntimeError('Le pilote a renvoyé une luminosité invalide.')
+    return {'available': True, 'device': device.name, 'raw': raw,
+            'maximum': maximum, 'percent': (raw * 100 + maximum // 2) // maximum,
+            'off': raw == 0}
+
+
+def state_file():
+    return Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'omarchy-screenpad/last-brightness.json'
+
+
+def remember(device, raw):
+    if raw <= 0:
+        return
+    path = state_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix='.brightness-', dir=path.parent)
+    try:
+        with os.fdopen(fd, 'w') as handle:
+            json.dump({'device': device.name, 'raw': raw}, handle)
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+def restore_value(device, maximum):
+    try:
+        saved = json.loads(state_file().read_text())
+        if saved.get('device') == device.name:
+            return max(1, min(maximum, int(saved['raw'])))
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return max(1, (maximum + 1) // 2)
+
+
+def write_brightness(device, raw):
+    executable = shutil.which('brightnessctl')
+    if not executable:
+        raise RuntimeError('brightnessctl doit être installé.')
+    result = subprocess.run([executable, '-q', '-c', device.parent.name,
+                             '-d', device.name, 'set', str(raw)],
+                            text=True, capture_output=True, timeout=5)
+    if result.returncode:
+        detail = result.stderr.strip() or 'permission refusée'
+        raise RuntimeError('Réglage du ScreenPad impossible : ' + detail)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', choices=['status', 'set', 'toggle'])
+    parser.add_argument('percent', nargs='?', type=int)
+    args = parser.parse_args()
+    if args.action == 'set' and (args.percent is None or not 1 <= args.percent <= 100):
+        parser.error('set demande un pourcentage de 1 à 100 ; toggle permet d’éteindre.')
+    if args.action != 'set' and args.percent is not None:
+        parser.error('pourcentage accepté uniquement avec set')
+    try:
+        device = find_device()
+        current = status(device)
+        if args.action != 'status':
+            if args.action == 'set':
+                target = max(1, (args.percent * current['maximum'] + 50) // 100)
+            elif current['off']:
+                target = restore_value(device, current['maximum'])
+            else:
+                target = 0
+                remember(device, current['raw'])
+            write_brightness(device, target)
+            current = status(device)
+            if current['raw'] != target:
+                raise RuntimeError('Le pilote n’a pas appliqué la luminosité demandée.')
+            remember(device, current['raw'])
+        print(json.dumps(current))
+        return 0
+    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as error:
+        print(json.dumps({'available': False, 'error': str(error)}))
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

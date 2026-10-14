@@ -1,0 +1,4 @@
+__pycache__/
+packaging/src/
+packaging/pkg/
+packaging/*.tar.*

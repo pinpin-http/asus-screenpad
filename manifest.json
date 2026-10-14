@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "soheib.screenpad",
+  "name": "ASUS ScreenPad",
+  "version": "0.1.1",
+  "author": "Soheib",
+  "license": "MIT",
+  "homepage": "https://github.com/pinpin-http/omarchy-screenpad",
+  "description": "Hardware brightness controls for the ASUS ScreenPad Plus.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {"barWidget": "Panel.qml"},
+  "barWidget": {
+    "displayName": "ASUS ScreenPad",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
